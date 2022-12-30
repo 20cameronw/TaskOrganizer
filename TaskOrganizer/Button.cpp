@@ -2,7 +2,14 @@
 #include <GL/glut.h>
 
 Button::Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b)
-	: x(x), y(y), width(width), height(height), text(text)
+	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0)
+{
+	SetColor(r, g, b);
+	font = GLUT_BITMAP_HELVETICA_18;
+}
+
+Button::Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b, void* _font)
+	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0), font(_font)
 {
 	SetColor(r, g, b);
 }
@@ -32,7 +39,7 @@ void Button::Draw()
 	glRasterPos2i(x + 3, y - 17);
 	for (auto c : text)
 	{
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+		glutBitmapCharacter(this->font, c);
 	}
 
 	if (numberOfTasks != 0)

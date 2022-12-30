@@ -23,7 +23,7 @@ void TaskList::addTask(Task task)
         newNode->next = current->next;
         current->next = newNode;
     }
-    size++;
+    size++; //hi
 }
 
 
@@ -146,7 +146,6 @@ void TaskList::load(std::string file)
     {
         //std::cout << "Begin load object...\n";
         std::string title, description, year, mon, day, hour, min, prior, diffi, empty;
-        int priority, difficulty;
         
         std::getline(inFile, title);
         //std::cout << "Loaded title...\n";
