@@ -16,37 +16,45 @@
 #include <gl/glut.h>
 
 //globals
-const int WINDOW_WIDTH = 600;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 900;
+const int WINDOW_HEIGHT = 500;
 const int WINDOW_POS_X = 100;
 const int WINDOW_POS_Y = 100;
-const int CALENDAR_X_OFFSET = 100;
+const int CALENDAR_X_OFFSET = 60;
 const int CALENDAR_Y_OFFSET = 100;
-const int CALENDAR_BUTTON_SIZE = 60;
-const int CALENDAR_BUTTON_PADDING = 7;
-const int CURRENT_MONTH = 12;
-const int CURRENT_YEAR = 2022;
+const int CALENDAR_BUTTON_SIZE = 50;
+const int CALENDAR_BUTTON_PADDING = 5;
+int CURRENT_MONTH;
+int CURRENT_YEAR;
 const std::string taskFile = "C:\\Users\\camer\\source\\repos\\TaskOrganizer\\TaskOrganizer\\taskFile.txt";
-std::string dayNames[] = { "Sun", "Mon", "Tue", 
+const std::string dayNames[] = { "Sun", "Mon", "Tue", 
 	"Wed", "Thu", "Fri", "Sat" };
-std::string monthNames[] = { "January", "February", 
+const std::string monthNames[] = { "January", "February", 
 	"March", "April", "May", "June", "July", "August", 
 	"September", "October", "November", "December" };
+const std::string header = "Task Organizer";
+void* font = GLUT_BITMAP_9_BY_15;
+void* smallFont = GLUT_BITMAP_8_BY_13;
 int mainWindow;
-std::vector<Button> buttons;
+std::vector<Button> calendarButtons;
+std::vector<Button> otherUIButtons;
 TaskList taskList;
 
 
 //prototypes
 void mainWindowDisplayCallback();
+void drawText();
 void drawButtons();
 void createCalendarButtons(int, int);
+void createUIButtons();
 int getFirstDayOfWeek(int, int);
 int getDaysInMonth(int);
-int getCurrentDayOrMonth(bool);
-void renderCalendarText();
-void chooseDay(std::string);
+tm getCurrentTime();
+void drawCalendarText();
+void clickCalendarDay(std::string);
 void mouseCallback(int, int, int, int);
+void switchMonth(std::string);
+void drawTaskBox();
 
 int main(int argc, char** argv)
 {
@@ -59,6 +67,9 @@ int main(int argc, char** argv)
 
 	taskList.save(taskFile);
 
+	CURRENT_MONTH = getCurrentTime().tm_mon + 1;
+	CURRENT_YEAR = getCurrentTime().tm_year + 1900;
+
 
 	//taskList.save(taskFile);
 	
@@ -66,7 +77,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition(WINDOW_POS_X, WINDOW_POS_Y);
-	mainWindow = glutCreateWindow("Schedule Organizer");
+	mainWindow = glutCreateWindow("Task Organizer");
 	glutDisplayFunc(mainWindowDisplayCallback);
 	glutMouseFunc(mouseCallback);
 	glClearColor(.1, .1, .1, 0);
@@ -84,14 +95,33 @@ void mainWindowDisplayCallback()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	drawButtons();
-	renderCalendarText();
+	drawCalendarText();
+	drawText();
+
 
 	glFlush();
 }
 
+void drawText()
+{
+	int x = WINDOW_WIDTH / 2 - 25;
+	int y = WINDOW_HEIGHT - 25;
+
+	glRasterPos2d(x, y);
+
+	for (auto c : header)
+	{
+		glutBitmapCharacter(font, c);
+	}
+}
+
 void drawButtons()
 {
-	for (auto button : buttons)
+	for (auto button : calendarButtons)
+	{
+		button.Draw();
+	}
+	for (auto button : otherUIButtons)
 	{
 		button.Draw();
 	}
@@ -104,7 +134,7 @@ void createCalendarButtons(int month, int year)
 
 	//get day of the week that the first day of the month falls on
 	int firstDay = getFirstDayOfWeek(month, year);
-	//start buttons on first day column
+	//start calendarButtons on first day column
 	int currentCol = firstDay;
 	int currentRow = (firstDay == 0) ? 6 : 5;
 
@@ -118,12 +148,31 @@ void createCalendarButtons(int month, int year)
 		int x = (currentCol * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE)) + CALENDAR_X_OFFSET;
 		int y = currentRow * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + CALENDAR_Y_OFFSET;
 		Button button(x, y, CALENDAR_BUTTON_SIZE, CALENDAR_BUTTON_SIZE, std::to_string(dayCount), .6, .6, .6);
-		button.SetOnClick(chooseDay);
+		button.SetOnClick(clickCalendarDay);
 		button.setNumberOfTasks(taskList.getTasksPerDay(month, dayCount, year));
-		if (dayCount == getCurrentDayOrMonth(true) && CURRENT_MONTH == getCurrentDayOrMonth(false)) button.SetColor(0.17, 0.53, 1.00);
-		buttons.push_back(button);
+		if (dayCount == getCurrentTime().tm_mday && CURRENT_MONTH - 1 == getCurrentTime().tm_mon && CURRENT_YEAR - 1900 == getCurrentTime().tm_year) button.SetColor(0.17, 0.53, 1.00);
+		calendarButtons.push_back(button);
 		currentCol++;
 	}
+
+	//set the x and y coords for next and previous month buttons
+	int previousButtonX = CALENDAR_X_OFFSET + 15;
+	int previousButtonY = CALENDAR_Y_OFFSET - 40;
+	int nextButtonX = (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + CALENDAR_X_OFFSET - 90;
+	int nextButtonY = CALENDAR_Y_OFFSET - 40;
+
+	//create those buttons
+	Button nextButton(nextButtonX, nextButtonY, 75, 40, "Next", .1, .1, .8, smallFont);
+	Button previousButton(previousButtonX, previousButtonY, 75, 40, "Previous", .1, .1, .8, smallFont);
+	nextButton.SetOnClick(switchMonth);
+	previousButton.SetOnClick(switchMonth);
+	calendarButtons.push_back(nextButton);
+	calendarButtons.push_back(previousButton);
+}
+
+void createUIButtons()
+{
+
 }
 
 //returns the day of the week that the given month starts on
@@ -175,7 +224,7 @@ int getDaysInMonth(int month)
 * All reference constants are global and refer to the 
 *	buttons' size, padding, and pos
 */
-void renderCalendarText()
+void drawCalendarText()
 {
 	// set the color of the text
 	glColor3f(1.0, 1.0, 1.0);
@@ -190,9 +239,9 @@ void renderCalendarText()
 		glRasterPos2i(x, y);
 
 		// write the current day of the week
-		for (int j = 0; j < dayNames[i].length(); j++)
+		for (int j = 0; j < (int)dayNames[i].length(); j++)
 		{
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, dayNames[i][j]);
+			glutBitmapCharacter(smallFont, dayNames[i][j]);
 		}
 
 		// update the position for the next day of the week
@@ -200,14 +249,15 @@ void renderCalendarText()
 	}
 
 	std::string monthName = monthNames[CURRENT_MONTH - 1];
-	x = CALENDAR_X_OFFSET + ((7 * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE)) / 2) - 50;
+	x = CALENDAR_X_OFFSET + ((7 * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE)) / 2) - 70;
 	y = CALENDAR_Y_OFFSET + 5 * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + 40;
 
 	glRasterPos2i(x, y);
 	//write the month name at the top
-	for (int i = 0; i < monthNames[CURRENT_MONTH - 1].length(); i++)
+	std::string monthTitle = monthNames[CURRENT_MONTH - 1] + " " + std::to_string(CURRENT_YEAR);
+	for (auto c : monthTitle)
 	{
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, monthNames[CURRENT_MONTH - 1][i]);
+		glutBitmapCharacter(font, c);
 	}
 
 	//draw a box around the calendar
@@ -227,7 +277,7 @@ void renderCalendarText()
 }
 
 //TODO: this function should open a new window with the tasks for that day
-void chooseDay(std::string id)
+void clickCalendarDay(std::string id)
 {
 	std::cout << id << std::endl;
 }
@@ -241,7 +291,7 @@ void mouseCallback(int button, int state, int x, int y)
 {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		for (auto button : buttons)
+		for (auto button : calendarButtons)
 		{
 			if (button.IsMouseOver(x, WINDOW_HEIGHT - y))
 			{
@@ -252,19 +302,38 @@ void mouseCallback(int button, int state, int x, int y)
 	}
 }
 
-/*
-* bool dayOrMonth:
-*		function returns the day if this is true
-*		returns the month (1 - 12) if false
-* 
-*/
-int getCurrentDayOrMonth(bool dayOrMonth)
+void switchMonth(std::string direction)
+{
+	calendarButtons.clear();
+	if (direction == "Next")
+	{
+		CURRENT_MONTH += 1;
+		if (CURRENT_MONTH >= 13)
+		{
+			CURRENT_MONTH = 1;
+			CURRENT_YEAR++;
+		}
+	} 
+	else if (direction == "Previous")
+	{
+		CURRENT_MONTH -= 1;
+		if (CURRENT_MONTH <= 0)
+		{
+			CURRENT_MONTH = 12;
+			CURRENT_YEAR--;
+		}
+	}
+	createCalendarButtons(CURRENT_MONTH, CURRENT_YEAR);
+	mainWindowDisplayCallback();
+	
+}
+
+
+tm getCurrentTime()
 {
 	time_t currentTime;
 	struct tm localTime;
 	time(&currentTime);                  
 	localtime_s(&localTime, &currentTime); 
-	int day = localTime.tm_mday;  
-	int month = localTime.tm_mon;
-	return (dayOrMonth) ? day : month + 1;
+	return localTime;
 }

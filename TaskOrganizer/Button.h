@@ -21,8 +21,11 @@ private:
 	// The callback function to be called when the button is clicked
 	std::function<void(std::string)> onclick;
 
+	void* font;
+
 public:
 	Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b);
+	Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b, void* _font);
 	// Set the callback function that should be called when the button is clicked
 	void SetOnClick(const std::function<void(std::string)>& onclick_) { onclick = onclick_; }
 	// Draw the button
