@@ -23,7 +23,7 @@ void TaskList::addTask(Task task)
         newNode->next = current->next;
         current->next = newNode;
     }
-    size++; //hi
+    size++; 
 }
 
 

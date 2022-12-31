@@ -9,9 +9,7 @@
 //A button also represents a day on the calendar (hence numberOfTasks)
 class Button {
 private:
-	// The x-coordinate of the top-left corner of the button
 	int x;
-	// The y-coordinate of the top-left corner of the button
 	int y;
 	int width;
 	int height;
@@ -24,8 +22,8 @@ private:
 	void* font;
 
 public:
-	Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b);
-	Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b, void* _font);
+	Button(int x, int y, int width, int height, std::string text, float r, float g, float b);
+	Button(int x, int y, int width, int height, std::string text, float r, float g, float b, void* font);
 	// Set the callback function that should be called when the button is clicked
 	void SetOnClick(const std::function<void(std::string)>& onclick_) { onclick = onclick_; }
 	// Draw the button
@@ -35,6 +33,6 @@ public:
 	int GetX();
 	int GetY();
 	void SetColor(float r, float g, float b);
-	void click();
-	void setNumberOfTasks(int);
+	void Click();
+	void SetNumberOfTasks(int);
 };

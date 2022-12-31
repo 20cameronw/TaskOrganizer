@@ -1,15 +1,15 @@
 #include "Button.h"
 #include <GL/glut.h>
 
-Button::Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b)
+Button::Button(int x, int y, int width, int height, std::string text, float r, float g, float b)
 	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0)
 {
 	SetColor(r, g, b);
 	font = GLUT_BITMAP_HELVETICA_18;
 }
 
-Button::Button(int x, int y, int width, int height, const std::string& text, float r, float g, float b, void* _font)
-	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0), font(_font)
+Button::Button(int x, int y, int width, int height, std::string text, float r, float g, float b, void* font)
+	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0), font(font)
 {
 	SetColor(r, g, b);
 }
@@ -75,12 +75,12 @@ void Button::SetColor(float r, float g, float b)
 	color[2] = b;
 }
 
-void Button::click()
+void Button::Click()
 {
 	onclick(text);
 }
 
-void Button::setNumberOfTasks(int num)
+void Button::SetNumberOfTasks(int num)
 {
 	numberOfTasks = num;
 }
