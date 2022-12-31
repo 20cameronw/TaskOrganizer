@@ -8,6 +8,8 @@
 #include "Button.h"
 #include "TaskList.h"
 #include "Task.h"
+#include "FormBox.h"
+#include "Form.h"
 #include <iostream>
 #include <ctime>
 #include <string>
@@ -54,7 +56,8 @@ void drawCalendarText();
 void clickCalendarDay(std::string);
 void mouseCallback(int, int, int, int);
 void switchMonth(std::string);
-void drawTaskBox();
+
+
 
 int main(int argc, char** argv)
 {
@@ -70,6 +73,7 @@ int main(int argc, char** argv)
 	CURRENT_MONTH = getCurrentTime().tm_mon + 1;
 	CURRENT_YEAR = getCurrentTime().tm_year + 1900;
 
+	
 
 	//taskList.save(taskFile);
 	
@@ -149,7 +153,7 @@ void createCalendarButtons(int month, int year)
 		int y = currentRow * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + CALENDAR_Y_OFFSET;
 		Button button(x, y, CALENDAR_BUTTON_SIZE, CALENDAR_BUTTON_SIZE, std::to_string(dayCount), .6, .6, .6);
 		button.SetOnClick(clickCalendarDay);
-		button.setNumberOfTasks(taskList.getTasksPerDay(month, dayCount, year));
+		button.SetNumberOfTasks(taskList.getTasksPerDay(month, dayCount, year));
 		if (dayCount == getCurrentTime().tm_mday && CURRENT_MONTH - 1 == getCurrentTime().tm_mon && CURRENT_YEAR - 1900 == getCurrentTime().tm_year) button.SetColor(0.17, 0.53, 1.00);
 		calendarButtons.push_back(button);
 		currentCol++;
@@ -295,7 +299,7 @@ void mouseCallback(int button, int state, int x, int y)
 		{
 			if (button.IsMouseOver(x, WINDOW_HEIGHT - y))
 			{
-				button.click();
+				button.Click();
 				break;
 			}
 		}
@@ -337,3 +341,4 @@ tm getCurrentTime()
 	localtime_s(&localTime, &currentTime); 
 	return localTime;
 }
+

@@ -140,12 +140,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Button.cpp" />
+    <ClCompile Include="Form.cpp" />
+    <ClCompile Include="FormBox.cpp" />
     <ClCompile Include="Task.cpp" />
     <ClCompile Include="TaskList.cpp" />
     <ClCompile Include="TaskOrganizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Button.h" />
+    <ClInclude Include="Form.h" />
+    <ClInclude Include="FormBox.h" />
     <ClInclude Include="Task.h" />
     <ClInclude Include="TaskList.h" />
   </ItemGroup>
