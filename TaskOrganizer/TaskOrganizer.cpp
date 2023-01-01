@@ -23,11 +23,13 @@ const int WINDOW_HEIGHT = 500;
 const int WINDOW_POS_X = 100;
 const int WINDOW_POS_Y = 100;
 const int CALENDAR_X_OFFSET = 60;
-const int CALENDAR_Y_OFFSET = 100;
+const int CALENDAR_Y_OFFSET = 130;
 const int CALENDAR_BUTTON_SIZE = 50;
 const int CALENDAR_BUTTON_PADDING = 5;
 int CURRENT_MONTH;
 int CURRENT_YEAR;
+int TOTAL_WEEKS;
+int By;
 const std::string taskFile = "C:\\Users\\camer\\source\\repos\\TaskOrganizer\\TaskOrganizer\\taskFile.txt";
 const std::string dayNames[] = { "Sun", "Mon", "Tue", 
 	"Wed", "Thu", "Fri", "Sat" };
@@ -39,7 +41,7 @@ void* font = GLUT_BITMAP_9_BY_15;
 void* smallFont = GLUT_BITMAP_8_BY_13;
 int mainWindow;
 std::vector<Button> calendarButtons;
-std::vector<Button> otherUIButtons;
+std::vector<Button> UIButtons;
 TaskList taskList;
 
 
@@ -88,6 +90,7 @@ int main(int argc, char** argv)
 	gluOrtho2D(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT);
 
 	createCalendarButtons(CURRENT_MONTH, CURRENT_YEAR);
+	createUIButtons();
 
 	glutMainLoop();
 
@@ -108,6 +111,7 @@ void mainWindowDisplayCallback()
 
 void drawText()
 {
+	/*
 	int x = WINDOW_WIDTH / 2 - 25;
 	int y = WINDOW_HEIGHT - 25;
 
@@ -116,7 +120,7 @@ void drawText()
 	for (auto c : header)
 	{
 		glutBitmapCharacter(font, c);
-	}
+	}*/
 }
 
 void drawButtons()
@@ -125,7 +129,7 @@ void drawButtons()
 	{
 		button.Draw();
 	}
-	for (auto button : otherUIButtons)
+	for (auto button : UIButtons)
 	{
 		button.Draw();
 	}
@@ -141,6 +145,11 @@ void createCalendarButtons(int month, int year)
 	//start calendarButtons on first day column
 	int currentCol = firstDay;
 	int currentRow = (firstDay == 0) ? 6 : 5;
+	TOTAL_WEEKS = ((numDaysInMonth + firstDay - 1) / 7) + 1;
+	std::cout << "Weeks for " << month << ", " << year << ": " << TOTAL_WEEKS << "\n";
+	//calculate where the bottom line y of the box should be
+	By = (TOTAL_WEEKS == 6) ? CALENDAR_Y_OFFSET - (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) - 20 : CALENDAR_Y_OFFSET - 20;
+	By = (TOTAL_WEEKS != 4) ? By : CALENDAR_Y_OFFSET + (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) - 20;
 
 	for (int dayCount = 1; dayCount < numDaysInMonth + 1; dayCount++)
 	{
@@ -159,24 +168,24 @@ void createCalendarButtons(int month, int year)
 		currentCol++;
 	}
 
-	//set the x and y coords for next and previous month buttons
-	int previousButtonX = CALENDAR_X_OFFSET + 15;
-	int previousButtonY = CALENDAR_Y_OFFSET - 40;
-	int nextButtonX = (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + CALENDAR_X_OFFSET - 90;
-	int nextButtonY = CALENDAR_Y_OFFSET - 40;
 
-	//create those buttons
-	Button nextButton(nextButtonX, nextButtonY, 75, 40, "Next", .1, .1, .8, smallFont);
-	Button previousButton(previousButtonX, previousButtonY, 75, 40, "Previous", .1, .1, .8, smallFont);
-	nextButton.SetOnClick(switchMonth);
-	previousButton.SetOnClick(switchMonth);
-	calendarButtons.push_back(nextButton);
-	calendarButtons.push_back(previousButton);
 }
 
 void createUIButtons()
 {
+	//set the x and y coords for next and previous month buttons
+	int previousButtonX = CALENDAR_X_OFFSET + 15;
+	int previousButtonY = 50;
+	int nextButtonX = (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + CALENDAR_X_OFFSET - 90;
+	int nextButtonY = 50;
 
+	//create next month and previous month buttons
+	Button nextButton(nextButtonX, nextButtonY, 75, 40, "Next", .1, .1, .8, smallFont);
+	Button previousButton(previousButtonX, previousButtonY, 75, 40, "Previous", .1, .1, .8, smallFont);
+	nextButton.SetOnClick(switchMonth);
+	previousButton.SetOnClick(switchMonth);
+	UIButtons.push_back(nextButton);
+	UIButtons.push_back(previousButton);
 }
 
 //returns the day of the week that the given month starts on
@@ -265,18 +274,20 @@ void drawCalendarText()
 	}
 
 	//draw a box around the calendar
+	int Lx = CALENDAR_X_OFFSET - 20; //left x
+	int Ty = CALENDAR_Y_OFFSET + 5 * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + 75; //top y
+	int Rx = CALENDAR_X_OFFSET + (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + 15; // right x
+	//bottom y (By) declared globally and calulated in createCalendarButtons
 	glColor3f(.9, .9, .9);
 	glBegin(GL_LINE_LOOP);
 		//top left
-		glVertex2f(CALENDAR_X_OFFSET - 20, 
-			CALENDAR_Y_OFFSET + 5 * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + 75); 
+		glVertex2f(Lx, Ty); 
 		//bottom left
-		glVertex2f(CALENDAR_X_OFFSET - 20, CALENDAR_Y_OFFSET - 20);
+		glVertex2f(Lx, By);
 		//bottom right
-		glVertex2f(CALENDAR_X_OFFSET + (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + 15, CALENDAR_Y_OFFSET - 20);
+		glVertex2f(Rx, By);
 		//top right
-		glVertex2f(CALENDAR_X_OFFSET + (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + 15, 
-			CALENDAR_Y_OFFSET + 5 * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + 75);
+		glVertex2f(Rx, Ty);
 	glEnd();
 }
 
@@ -303,6 +314,16 @@ void mouseCallback(int button, int state, int x, int y)
 				break;
 			}
 		}
+
+		for (auto button : UIButtons)
+		{
+			if (button.IsMouseOver(x, WINDOW_HEIGHT - y))
+			{
+				button.Click();
+				break;
+			}
+		}
+		
 	}
 }
 
