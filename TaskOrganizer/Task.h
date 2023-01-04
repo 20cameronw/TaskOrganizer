@@ -16,6 +16,7 @@ private:
 
 public:
 	Task(time_t dueDate, int priority, int difficulty, std::string title, std::string description);
+	Task();
 
 
 	//getters 

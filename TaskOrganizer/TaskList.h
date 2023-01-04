@@ -31,5 +31,9 @@ public:
 	int getTasksPerDay(int, int, int);
 	void save(std::string);
 	void load(std::string);
+	TaskList* sortByPriority() const;
+	TaskList* sortByDueDate() const;
+	TaskList* sortByDifficulty() const;
+	TaskList* sortByDay() const;
 };
 

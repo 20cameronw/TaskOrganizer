@@ -5,7 +5,15 @@
 Task::Task(time_t dueDate, int priority, int difficulty, std::string title, std::string description)
 	: dueDate(dueDate), priority(priority), difficulty(difficulty), title(title), description(description) {}
 
-
+//default
+Task::Task()
+{
+	dueDate = 0;
+	priority = 0;
+	difficulty = 0;
+	title = "New Task";
+	description = "Description";
+}
 
 //getters and setters 
 time_t Task::GetDueDate() const 

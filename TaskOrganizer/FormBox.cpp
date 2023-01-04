@@ -1,11 +1,12 @@
 #include "FormBox.h"
 #include <gl/glut.h>
 
-FormBox::FormBox(int x, int y, int width, int height, std::string text, void* font, int id)
-	: x(x), y(y), width(width), height(height), text(text), font(font), id(id)
+FormBox::FormBox(int x, int y, int width, int height, std::string text, int id)
+	: x(x), y(y), width(width), height(height), text(text), id(id)
 {
 	SetColor(0, 0, 0);
 	borderWidth = 3;
+	font = GLUT_BITMAP_HELVETICA_12;
 }
 
 void FormBox::SetColor(float r, float g, float b)

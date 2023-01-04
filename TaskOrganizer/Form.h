@@ -4,6 +4,16 @@
 #include "Task.h"
 #include <vector>
 
+/*
+* Class form shows the current task's attributes that we can edit
+* 
+* The attributes we need to show are:
+*	Title
+*	Due date
+*	Description
+*	priority 
+*	difficulty
+*/
 class Form
 {
 private:
@@ -16,6 +26,7 @@ public:
 	Form();		 //if task not given we are creating a new one 
 
 	void selectTask(int);
+	void Draw() const;
 
 };
 

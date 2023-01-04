@@ -39,10 +39,13 @@ const std::string monthNames[] = { "January", "February",
 const std::string header = "Task Organizer";
 void* font = GLUT_BITMAP_9_BY_15;
 void* smallFont = GLUT_BITMAP_8_BY_13;
+Form* currentForm;
 int mainWindow;
 std::vector<Button> calendarButtons;
 std::vector<Button> UIButtons;
-TaskList taskList;
+TaskList loadedTaskList;
+TaskList* currentSortedTaskList;
+int currentTaskIndex;
 
 
 //prototypes
@@ -58,6 +61,10 @@ void drawCalendarText();
 void clickCalendarDay(std::string);
 void mouseCallback(int, int, int, int);
 void switchMonth(std::string);
+void switchTask(std::string);
+void createForm(Task*);
+Task* getNextTask();
+
 
 
 
@@ -66,18 +73,20 @@ int main(int argc, char** argv)
 	//init glut settings
 	glutInit(&argc, argv);
 
-	taskList.load(taskFile);
+	loadedTaskList.load(taskFile);
 
-	taskList.displayTasks();
+	loadedTaskList.displayTasks();
 
-	taskList.save(taskFile);
+	loadedTaskList.save(taskFile);
 
 	CURRENT_MONTH = getCurrentTime().tm_mon + 1;
 	CURRENT_YEAR = getCurrentTime().tm_year + 1900;
+	currentTaskIndex = 1;
+	currentSortedTaskList = &loadedTaskList;
 
 	
 
-	//taskList.save(taskFile);
+	//loadedTaskList.save(taskFile);
 	
 	//init a glut window
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
@@ -111,16 +120,7 @@ void mainWindowDisplayCallback()
 
 void drawText()
 {
-	/*
-	int x = WINDOW_WIDTH / 2 - 25;
-	int y = WINDOW_HEIGHT - 25;
-
-	glRasterPos2d(x, y);
-
-	for (auto c : header)
-	{
-		glutBitmapCharacter(font, c);
-	}*/
+	
 }
 
 void drawButtons()
@@ -132,6 +132,10 @@ void drawButtons()
 	for (auto button : UIButtons)
 	{
 		button.Draw();
+	}
+	if (currentForm != nullptr)
+	{
+		currentForm->Draw();
 	}
 }
 
@@ -146,7 +150,7 @@ void createCalendarButtons(int month, int year)
 	int currentCol = firstDay;
 	int currentRow = (firstDay == 0) ? 6 : 5;
 	TOTAL_WEEKS = ((numDaysInMonth + firstDay - 1) / 7) + 1;
-	std::cout << "Weeks for " << month << ", " << year << ": " << TOTAL_WEEKS << "\n";
+	//std::cout << "Weeks for " << month << ", " << year << ": " << TOTAL_WEEKS << "\n";
 	//calculate where the bottom line y of the box should be
 	By = (TOTAL_WEEKS == 6) ? CALENDAR_Y_OFFSET - (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) - 20 : CALENDAR_Y_OFFSET - 20;
 	By = (TOTAL_WEEKS != 4) ? By : CALENDAR_Y_OFFSET + (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) - 20;
@@ -162,7 +166,7 @@ void createCalendarButtons(int month, int year)
 		int y = currentRow * (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) + CALENDAR_Y_OFFSET;
 		Button button(x, y, CALENDAR_BUTTON_SIZE, CALENDAR_BUTTON_SIZE, std::to_string(dayCount), .6, .6, .6);
 		button.SetOnClick(clickCalendarDay);
-		button.SetNumberOfTasks(taskList.getTasksPerDay(month, dayCount, year));
+		button.SetNumberOfTasks(loadedTaskList.getTasksPerDay(month, dayCount, year));
 		if (dayCount == getCurrentTime().tm_mday && CURRENT_MONTH - 1 == getCurrentTime().tm_mon && CURRENT_YEAR - 1900 == getCurrentTime().tm_year) button.SetColor(0.17, 0.53, 1.00);
 		calendarButtons.push_back(button);
 		currentCol++;
@@ -174,18 +178,33 @@ void createCalendarButtons(int month, int year)
 void createUIButtons()
 {
 	//set the x and y coords for next and previous month buttons
-	int previousButtonX = CALENDAR_X_OFFSET + 15;
-	int previousButtonY = 50;
-	int nextButtonX = (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + CALENDAR_X_OFFSET - 90;
-	int nextButtonY = 50;
+	int prevMonButX = CALENDAR_X_OFFSET + 15;
+	int prevMonButY = 50;
+	int nextMonButX = (CALENDAR_BUTTON_PADDING + CALENDAR_BUTTON_SIZE) * 7 + CALENDAR_X_OFFSET - 90;
+	int nextMonButY = prevMonButY;
 
 	//create next month and previous month buttons
-	Button nextButton(nextButtonX, nextButtonY, 75, 40, "Next", .1, .1, .8, smallFont);
-	Button previousButton(previousButtonX, previousButtonY, 75, 40, "Previous", .1, .1, .8, smallFont);
+	Button nextButton(nextMonButX, nextMonButY, 75, 40, "Next", .1, .1, .8, smallFont);
+	Button previousButton(prevMonButX, prevMonButY, 75, 40, "Previous", .1, .1, .8, smallFont);
 	nextButton.SetOnClick(switchMonth);
 	previousButton.SetOnClick(switchMonth);
 	UIButtons.push_back(nextButton);
 	UIButtons.push_back(previousButton);
+
+	//coords for next and previous task
+	int prevTaskButX = WINDOW_WIDTH - 400;
+	int prevTaskButY = 50;
+	int nextTaskButX = prevTaskButX + 200;
+	int nextTaskButY = prevTaskButY;
+
+	Button nextTButton(nextTaskButX, nextTaskButY, 75, 40, "Next", .1, .1, .8, smallFont);
+	Button prevTButton(prevTaskButX, prevTaskButY, 75, 40, "Previous", .1, .1, .8, smallFont);
+	nextTButton.SetOnClick(switchTask);
+	prevTButton.SetOnClick(switchTask);
+	UIButtons.push_back(nextTButton);
+	UIButtons.push_back(prevTButton);
+
+	createForm(&(loadedTaskList.getTask(currentTaskIndex)));
 }
 
 //returns the day of the week that the given month starts on
@@ -361,5 +380,31 @@ tm getCurrentTime()
 	time(&currentTime);                  
 	localtime_s(&localTime, &currentTime); 
 	return localTime;
+}
+
+void switchTask(std::string direction)
+{
+	delete currentForm;
+	if (direction == "Next" && currentTaskIndex < loadedTaskList.getSize() - 1)
+	{
+		currentTaskIndex++;
+	}
+	else if (direction == "Previous" && currentTaskIndex > 0)
+	{
+		currentTaskIndex--;
+	}
+	createForm(getNextTask());
+	mainWindowDisplayCallback();
+}
+
+
+void createForm(Task* task)
+{
+	currentForm = new Form(task);
+}
+
+Task* getNextTask()
+{
+	return &currentSortedTaskList->getTask(currentTaskIndex);
 }
 
