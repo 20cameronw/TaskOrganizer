@@ -6,12 +6,16 @@ Button::Button(int x, int y, int width, int height, std::string text, float r, f
 {
 	SetColor(r, g, b);
 	font = GLUT_BITMAP_HELVETICA_18;
+	textOffsetX = 3;
+	textOffsetY = 17;
 }
 
 Button::Button(int x, int y, int width, int height, std::string text, float r, float g, float b, void* font)
 	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0), font(font)
 {
 	SetColor(r, g, b);
+	textOffsetX = 3;
+	textOffsetY = 17;
 }
 
 void Button::Draw()
@@ -36,10 +40,10 @@ void Button::Draw()
 	glEnd();
 
 	// Draw the day number
-	glRasterPos2i(x + 3, y - 17);
+	glRasterPos2i(x + textOffsetX, y - textOffsetY);
 	for (auto c : text)
 	{
-		glutBitmapCharacter(this->font, c);
+		glutBitmapCharacter(font, c);
 	}
 
 	if (numberOfTasks != 0)
@@ -83,4 +87,9 @@ void Button::Click()
 void Button::SetNumberOfTasks(int num)
 {
 	numberOfTasks = num;
+}
+
+void Button::setTextOffsetY(int y)
+{
+	textOffsetY = y;
 }

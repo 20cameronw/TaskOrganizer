@@ -14,6 +14,8 @@ private:
 	int width;
 	int height;
 	std::string text;
+	int textOffsetX;
+	int textOffsetY;
 	float color[3];
 	int numberOfTasks;
 	// The callback function to be called when the button is clicked
@@ -35,4 +37,5 @@ public:
 	void SetColor(float r, float g, float b);
 	void Click();
 	void SetNumberOfTasks(int);
+	void setTextOffsetY(int);
 };
