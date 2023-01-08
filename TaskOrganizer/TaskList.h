@@ -35,5 +35,6 @@ public:
 	TaskList* sortByDueDate() const;
 	TaskList* sortByDifficulty() const;
 	TaskList* sortByDay() const;
+    void addSortedByPriority(Task task);
 };
 

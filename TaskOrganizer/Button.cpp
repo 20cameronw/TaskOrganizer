@@ -1,5 +1,9 @@
 #include "Button.h"
-#include <GL/glut.h>
+#ifdef _WIN32
+	#include <gl/glut.h>
+#else
+	#include <GLUT/glut.h>
+#endif
 
 Button::Button(int x, int y, int width, int height, std::string text, float r, float g, float b)
 	: x(x), y(y), width(width), height(height), text(text), numberOfTasks(0)

@@ -15,7 +15,11 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <gl/glut.h>
+#ifdef _WIN32
+	#include <gl/glut.h>
+#else
+	#include <GLUT/glut.h>
+#endif
 
 //globals
 const int WINDOW_WIDTH = 900;
@@ -62,8 +66,9 @@ void clickCalendarDay(std::string);
 void mouseCallback(int, int, int, int);
 void switchMonth(std::string);
 void switchTask(std::string);
-void createForm(Task*);
+void createForm();
 Task* getNextTask();
+void menuCallback(int);
 
 
 
@@ -81,7 +86,7 @@ int main(int argc, char** argv)
 
 	CURRENT_MONTH = getCurrentTime().tm_mon + 1;
 	CURRENT_YEAR = getCurrentTime().tm_year + 1900;
-	currentTaskIndex = 1;
+	currentTaskIndex = 0;
 	currentSortedTaskList = &loadedTaskList;
 
 	
@@ -101,6 +106,28 @@ int main(int argc, char** argv)
 	createCalendarButtons(CURRENT_MONTH, CURRENT_YEAR);
 	createUIButtons();
 
+
+
+    int sortMenu = glutCreateMenu(menuCallback);
+    glutAddMenuEntry("Sort by Date", 1);
+    glutAddMenuEntry("Sort by Priority", 2);
+    glutAddMenuEntry("Sort by Difficulty", 3);
+
+    int manageMenu = glutCreateMenu(menuCallback);
+    glutAddMenuEntry("Add Task", 4);
+    glutAddMenuEntry("Edit Task", 5);
+    glutAddMenuEntry("Delete Task", 6);
+
+    int mainMenu = glutCreateMenu(menuCallback);
+    glutAddSubMenu("Sort", sortMenu);
+    glutAddSubMenu("Manage", manageMenu);
+    glutAddMenuEntry("Exit", 7);
+
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+
+
+
+
 	glutMainLoop();
 
 	return -1;
@@ -117,6 +144,45 @@ void mainWindowDisplayCallback()
 
 	glFlush();
 }
+
+
+void menuCallback(int option)
+{
+    switch (option)
+    {
+        case 1:
+            //delete currentSortedTaskList;
+            //currentSortedTaskList = loadedTaskList.sortByDueDate();
+            break;
+        case 2:
+            currentSortedTaskList = loadedTaskList.sortByPriority();
+            currentTaskIndex = 0;
+            createForm();
+            break;
+        case 3:
+           // delete currentSortedTaskList;
+            //currentSortedTaskList = loadedTaskList.sortByDifficulty();
+            break;
+        case 4:
+            currentForm = new Form();
+            break;
+        case 5:
+            //currentForm = new Form(*currentSortedTaskList->getTask(currentTaskIndex));
+            break;
+        case 6:
+            //loadedTaskList.deleteTask(currentSortedTaskList->getTask(currentTaskIndex));
+            //currentSortedTaskList->deleteTask(currentSortedTaskList->getTask(currentTaskIndex));
+            break;
+        case 7:
+            exit(0);
+            break;
+        default:
+            break;
+    }
+    mainWindowDisplayCallback();
+}
+
+
 
 void drawText()
 {
@@ -204,7 +270,7 @@ void createUIButtons()
 	UIButtons.push_back(nextTButton);
 	UIButtons.push_back(prevTButton);
 
-	createForm(&(loadedTaskList.getTask(currentTaskIndex)));
+	createForm();
 }
 
 //returns the day of the week that the given month starts on
@@ -384,7 +450,6 @@ tm getCurrentTime()
 
 void switchTask(std::string direction)
 {
-	delete currentForm;
 	if (direction == "Next" && currentTaskIndex < loadedTaskList.getSize() - 1)
 	{
 		currentTaskIndex++;
@@ -393,18 +458,13 @@ void switchTask(std::string direction)
 	{
 		currentTaskIndex--;
 	}
-	createForm(getNextTask());
+	createForm();
 	mainWindowDisplayCallback();
 }
 
 
-void createForm(Task* task)
+void createForm()
 {
-	currentForm = new Form(task);
+    delete currentForm;
+	currentForm = new Form(&currentSortedTaskList->getTask(currentTaskIndex));
 }
-
-Task* getNextTask()
-{
-	return &currentSortedTaskList->getTask(currentTaskIndex);
-}
-
