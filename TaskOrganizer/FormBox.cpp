@@ -4,7 +4,7 @@
 FormBox::FormBox(int x, int y, int width, int height, std::string text, int id)
 	: x(x), y(y), width(width), height(height), text(text), id(id)
 {
-	SetColor(0, 0, 0);
+	SetColor(1, 1, 1);
 	borderWidth = 3;
 	font = GLUT_BITMAP_HELVETICA_12;
 }
@@ -39,11 +39,13 @@ void FormBox::Draw() const
 		glVertex2i(x, y - height);
 	glEnd();
 
-	//draw the text
+	//draw the ttile=
 	glRasterPos2i(x + 3,y - height / 2);
 	for (auto c : text)
 	{
 		glutBitmapCharacter(font, c);
 	}
+
+
 
 }

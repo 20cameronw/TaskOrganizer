@@ -179,3 +179,40 @@ void TaskList::load(std::string file)
 
     inFile.close();
 }
+
+TaskList* TaskList::sortByPriority() const
+{
+	TaskList* sortedList = new TaskList;
+
+	Node* current = head;
+	while (current != nullptr)
+	{
+		sortedList->addSortedByPriority(current->task);
+		current = current->next;
+	}
+
+	return sortedList;
+}
+
+void TaskList::addSortedByPriority(Task task)
+{
+	Node* newNode = new Node(task);
+
+	if (head == nullptr || head->task.GetPriority() < task.GetPriority())
+	{
+		newNode->next = head;
+		head = newNode;
+	}
+	else
+	{
+		Node* current = head;
+		while (current->next != nullptr && current->next->task.GetPriority() >= task.GetPriority())
+		{
+			current = current->next;
+		}
+		newNode->next = current->next;
+		current->next = newNode;
+	}
+
+	size++;
+}
